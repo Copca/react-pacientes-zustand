@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { DraftPatient, Patient } from '../types';
@@ -18,35 +18,44 @@ const createPatient = (patient: DraftPatient): Patient => {
 };
 
 export const usePatientStore = create<PatientState>()(
-	devtools((set) => ({
-		patients: [],
-		activeId: '',
-		addPatient: (data) => {
-			const newPatient = createPatient(data);
+	devtools(
+		persist(
+			(set) => ({
+				patients: [],
+				activeId: '',
+				addPatient: (data) => {
+					const newPatient = createPatient(data);
 
-			set((state) => ({
-				patients: [...state.patients, newPatient]
-			}));
-		},
-		deletePatient: (id) => {
-			set((state) => ({
-				patients: state.patients.filter((patientState) => patientState.id !== id)
-			}));
-		},
-		getPatientById: (id) => {
-			set(() => ({
-				activeId: id
-			}));
-		},
-		updatePatient: (data) => {
-			set((state) => ({
-				patients: state.patients.map((patientState) =>
-					patientState.id === state.activeId
-						? { id: state.activeId, ...data }
-						: patientState
-				),
-				activeId: ''
-			}));
-		}
-	}))
+					set((state) => ({
+						patients: [...state.patients, newPatient]
+					}));
+				},
+				deletePatient: (id) => {
+					set((state) => ({
+						patients: state.patients.filter((patientState) => patientState.id !== id)
+					}));
+				},
+				getPatientById: (id) => {
+					set(() => ({
+						activeId: id
+					}));
+				},
+				updatePatient: (data) => {
+					set((state) => ({
+						patients: state.patients.map((patientState) =>
+							patientState.id === state.activeId
+								? { id: state.activeId, ...data }
+								: patientState
+						),
+						activeId: ''
+					}));
+				}
+			}),
+			{
+				name: 'patient-storage'
+				// En caso de querer usar sessionStorage en Zustand
+				// storage: createJSONStorage(() => sessionStorage)
+			}
+		)
+	)
 );
