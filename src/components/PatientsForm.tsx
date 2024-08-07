@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 import type { DraftPatient } from '../types';
 import { usePatientStore } from '../store/store';
@@ -6,16 +8,43 @@ import { usePatientStore } from '../store/store';
 import Error from './Error';
 
 export default function PatientForm() {
-	const { addPatient } = usePatientStore();
+	const { patients, activeId, addPatient, updatePatient } = usePatientStore();
 	const {
 		register,
 		handleSubmit,
+		setValue,
 		formState: { errors },
 		reset
 	} = useForm<DraftPatient>();
 
+	// Monitoreamos los cambios de activeId cuando se presiona el boton de editar
+	useEffect(() => {
+		if (activeId) {
+			const activePatient = patients.filter(
+				(patientState) => patientState.id === activeId
+			)[0];
+
+			// Llenamos el formulario para editar
+			setValue('name', activePatient.name);
+			setValue('caretaker', activePatient.caretaker);
+			setValue('email', activePatient.email);
+			setValue('date', activePatient.date);
+			setValue('symptoms', activePatient.symptoms);
+		}
+	}, [activeId, patients, setValue]);
+
 	const registerPatient = (data: DraftPatient) => {
-		addPatient(data);
+		// Revisamos si es creacion o edicion
+		if (activeId) {
+			// Edición
+			updatePatient(data);
+			toast.success('Paciente Actualizado Correctamente');
+		} else {
+			// Nuevo
+			addPatient(data);
+			toast.success('Paciente Registrado Correctamente');
+		}
+
 		reset();
 	};
 
